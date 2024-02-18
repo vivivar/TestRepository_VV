@@ -7,29 +7,40 @@ Interview Test for GitHub, APIs and MUI
 import { useState, useEffect } from 'react';
 import { Container, Typography, List, ListItem, Box, AppBar, Toolbar, IconButton, Button } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import fetchNagerData from './api'; 
 
-//Main
 const Home = () => {
-  const [selectedOption, setSelectedOption] = useState('posts');
+  const [selectedCountry, setSelectedCountry] = useState(null);
   const [data, setData] = useState([]);
+  const [buttonClicked, setButtonClicked] = useState(false);
 
-  //Fetch the information from the JSonPlaceholder API depending on the selectedOption, which is selected depending on the clicked button
   useEffect(() => {
-    fetch(`https://jsonplaceholder.typicode.com/${selectedOption}`)
-      .then((response) => response.json())
-      .then((json) => setData(json));
-  }, [selectedOption]);
+    const fetchData = async () => {
+      try {
+        if (selectedCountry) {
+          const response = await fetchNagerData(`/PublicHolidays/2024/${selectedCountry}`);
+          setData(response || []);
+        }
+      } catch (error) {
+        console.error(`Error fetching data from Nager.Date API for ${selectedCountry}:`, error.message);
+      }
+    };
 
-  const handleButtonClick = (option) => {
-    setSelectedOption(option);
+    if (buttonClicked) {
+      fetchData();
+    }
+  }, [selectedCountry, buttonClicked]);
+
+  const handleButtonClick = (country) => {
+    setSelectedCountry(country);
+    setButtonClicked(true);
   };
 
+
   return (
-      
+    <div>
 
-      <div>
-
-        {/*// AppBar*/}
+      {/*// AppBar*/}
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static">
             <Toolbar variant="dense">
@@ -43,30 +54,37 @@ const Home = () => {
           </AppBar>
         </Box>
 
-        {/*// Box for buttons*/}
-        <Box display="flex" justifyContent="center">
-          {/*Fetch Posts API Button*/}
-          <Button style={{ margin: '20px'}} variant="contained" onClick={() => handleButtonClick('posts')}>Fetch Posts</Button>
 
-          {/*//Fetch To-Do's API Button*/}
-          <Button style={{ margin: '20px'}} variant="contained" onClick={() => handleButtonClick('todos')}>Fetch To-do's</Button>
+      <Box display="flex" justifyContent="center">
+        <Button style={{ margin: '20px' }} variant="contained" onClick={() => handleButtonClick('us')}>
+          Fetch Data for United States
+        </Button>
+        <Button style={{ margin: '20px' }} variant="contained" onClick={() => handleButtonClick('fr')}>
+          Fetch Data for France
+        </Button>
+        <Button style={{ margin: '20px' }} variant="contained" onClick={() => handleButtonClick('cr')}>
+          Fetch Data for Costa Rica
+        </Button>
+      </Box>
 
-          {/*Fetch User's API Button*/}
-          <Button style={{ margin: '20px'}} variant="contained" onClick={() => handleButtonClick('users')}>Fetch Users</Button>
-        </Box>
+      {buttonClicked && (
+        <div>
+          <Typography style={{ margin: '20px' }} variant="h4">
+            List from Nager.Date API for {selectedCountry.toUpperCase()} Holidays
+          </Typography>
 
-        {/*//List title. Changes depending on the chosen button*/}
-        <Typography style={{ margin: '20px'}} variant="h4">List from {selectedOption}</Typography>
-
-        {/*//Iteration on the selected API list.*/}
-        <List>
-          {data.map((item) => (
-            <ListItem key={item.id}>
-              {item.title || item.name}
-            </ListItem>
-          ))}
-        </List>
-      </div>
+          <List>
+            {data.map((item) => (
+              <ListItem key={item.date}>
+                <Typography>
+                  {item.date} - {item.name}
+                </Typography>
+              </ListItem>
+            ))}
+          </List>
+        </div>
+      )}
+    </div>
   );
 };
 
